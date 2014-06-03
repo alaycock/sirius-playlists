@@ -1,21 +1,21 @@
+var config = require('../config');
+var express = require('express');
+var router = express.Router();
 var request = require('request');
-var fs = require('fs');
 var gapis = require('googleapis');
-
 var apiKey = process.argv[2];
-
 var channel = "thebeat";
 var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/" + channel + "/timestamp/";
+var page_res;
 
+router.get('/', function(req, res) {
 
-function main()
-{
+  console.log("Getting song.");
+  page_res = res;
   var time_source = "http://www.siriusxm.com/sxm_date_feed.tzi";
-  //getInternetTime(time_source);
-  getRadioData(new Date())
 
-
-}
+  getRadioData(new Date());
+});
 
 function getRadioData(time) {
 
@@ -65,21 +65,19 @@ function searchYoutube(query) {
       return;
     }
     var params = { q: query, part: 'snippet'};
-    client.youtube.search.list(params).withApiKey(apiKey).execute(print_result);
+    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(print_result);
   });
 }
 
 function print_result(err, response) {
-
+  console.log(JSON.stringify(err) + response);
   if(err) {
     console.log("Error retreiving YouTube video.");
+    page_res.send("{}");
     return;
   }
-  console.log(JSON.stringify(response));
 
-  console.log(response.items);
+  page_res.send(response.items);
 }
 
-
-main();
-
+module.exports = router;
