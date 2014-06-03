@@ -12,7 +12,6 @@ router.get('/', function(req, res) {
 
   console.log("Getting song.");
   page_res = res;
-  var time_source = "http://www.siriusxm.com/sxm_date_feed.tzi";
 
   getRadioData(new Date());
 });
@@ -29,15 +28,14 @@ function getRadioData(time) {
 
   data_url = data_url + date_string;
 
-  console.log(data_url);
+  console.log("Retrieving songs for " + date_string + " ");
+
+  console.log("From the url " + data_url);
 
   request({uri: data_url}, function(err, response, body) {
     if(err && response.statusCode !== 200){console.log('Request error.'); return;}
 
-
     data = JSON.parse(body);
-
-    //console.log(data.channelMetadataResponse.metaData.currentEvent);
 
     if(data.channelMetadataResponse.messages.code != 100)
       console.log("No data returned");
@@ -57,7 +55,7 @@ function zeroPad(number) {
 
 
 function searchYoutube(query) {
-  console.log(query);
+  console.log("Searching for song: " + query);
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
     if (err) {
@@ -70,14 +68,12 @@ function searchYoutube(query) {
 }
 
 function print_result(err, response) {
-  console.log(JSON.stringify(err) + response);
   if(err) {
     console.log("Error retreiving YouTube video.");
     page_res.send("{}");
     return;
   }
-
-  page_res.send(response.items);
+  page_res.send({items: response.items});
 }
 
 module.exports = router;
