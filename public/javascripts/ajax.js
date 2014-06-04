@@ -9,9 +9,19 @@ function queueSong() {
   $.ajax('/getsong').done(function(data){
 
     try{
-      var songId = data.items[0].id.videoId;
-      if(videoQueue.indexOf(songId) == -1)
+      var songId = "";
+      for(var i = 0; i < 5; i++) {
+        element = data.items[i];
+        if(element.id.kind == "youtube#video")
+        {
+          songId = data.items[0].id.videoId;
+          break;
+        }
+      }
+
+      if(songId != "" && videoQueue.indexOf(songId) == -1)
         videoQueue.push(songId);
+
       console.log(videoQueue);
     }
     catch(err) {
