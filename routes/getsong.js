@@ -26,16 +26,25 @@ function getRadioData(time) {
     zeroPad(time.getUTCHours()) + ":" +
     zeroPad(time.getUTCMinutes()) + ":" + "00";
 
-  data_url = data_url + date_string;
+  sirius_source = data_url + date_string;
 
   console.log("Retrieving songs for " + date_string + " ");
 
-  console.log("From the url " + data_url);
+  console.log("From the url " + sirius_source);
 
-  request({uri: data_url}, function(err, response, body) {
-    if(err && response.statusCode !== 200){console.log('Request error.'); return;}
+  request({uri: sirius_source}, function(err, response, body) {
+    if(err && response.statusCode !== 200){
+      console.log('Request error.');
+      respond_error("Could not reach SeriusXM website.");
+      return;
+    }
 
-    data = JSON.parse(body);
+    try {
+      data = JSON.parse(body);
+    }
+    catch(err) {
+      respond_error("Could not parse SeriusXM page.");
+    }
 
     if(data.channelMetadataResponse.messages.code != 100)
       console.log("No data returned");
@@ -60,6 +69,7 @@ function searchYoutube(query) {
   gapis.discover('youtube', 'v3').execute(function(err, client) {
     if (err) {
       console.log("Error during client discovery: " + err);
+      respond_error("Error discovering YouTube client.");
       return;
     }
     var params = { q: query, part: 'snippet'};
@@ -70,10 +80,15 @@ function searchYoutube(query) {
 function print_result(err, response) {
   if(err) {
     console.log("Error retreiving YouTube video.");
-    page_res.send("{}");
+    respond_error("Internal error, could not contact YouTube.");
     return;
   }
   page_res.send({items: response.items});
+}
+
+function respond_error(err) {
+  error = {'error': err};
+  page_res.send(error);
 }
 
 module.exports = router;
