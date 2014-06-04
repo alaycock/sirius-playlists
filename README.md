@@ -1,7 +1,7 @@
 serious-playlists
 =================
 
-SeriusXM scraper + playlist generator
+SiriusXM scraper + playlist generator
 
 It's a web service that scrapes the Sirius XM 'now playing' data, finds it on youtube, and plays as it is scraped. It's a makeshift free internet satellite radio service, with just the music.
 
