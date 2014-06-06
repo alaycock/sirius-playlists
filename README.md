@@ -13,13 +13,11 @@ Installation
 3.  `npm install` to install dependencies
 4.  `npm start` to start the web server on localhost:3000
 
-Current Issues
---------------
+To Do
+-----
 
-*  Web service doesn't work behind a proxy
-*  No visible playlist
-*  Only includes one Sirius XM channel (BPM), but can be easily modified in getsong.js
-*  No caching/database, a fresh scrape is done every time /getsong is requested
-*  Empty website
-*  No 'next' or 'prev' buttons
+*  Add caching/database, instead of a fresh scrape every time /getsong is requested
+*  Make it pretty
+*  Add 'next' button
 *  /getsong returns too much irrelevant metadata
+*  Make priority list for stations
