@@ -4,8 +4,7 @@ var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
 var apiKey = process.argv[2];
-var channel = "thebeat";
-var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/" + channel + "/timestamp/";
+var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
 var page_res;
 
 router.get('/', function(req, res) {
@@ -13,20 +12,32 @@ router.get('/', function(req, res) {
   console.log("Getting song.");
   page_res = res;
 
-  getRadioData(new Date());
+  getRadioData(req, new Date());
 });
 
-function getRadioData(time) {
-
-  console.log(time);
-
+function generateRadioURL(req, time) {
   date_string =
     zeroPad(time.getUTCMonth() + 1) + "-" +
     zeroPad(time.getUTCDate()) + "-" +
     zeroPad(time.getUTCHours()) + ":" +
     zeroPad(time.getUTCMinutes()) + ":" + "00";
 
-  sirius_source = data_url + date_string;
+  if( req.query.c == undefined ) throw "No channel specified.";
+
+
+  return data_url.replace("$$$$$", req.query.c) + date_string
+}
+
+function getRadioData(req, time) {
+
+  console.log(time);
+  try {
+    sirius_source = generateRadioURL(req, time);
+  }
+  catch(err) {
+    respond_error(err);
+    return;
+  }
 
   console.log("Retrieving songs for " + date_string + " ");
 
@@ -44,6 +55,7 @@ function getRadioData(time) {
     }
     catch(err) {
       respond_error("Could not parse SeriusXM page.");
+      return;
     }
 
     if(data.channelMetadataResponse.messages.code != 100)

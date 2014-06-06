@@ -6,29 +6,41 @@ window.setInterval(queueSong, 30000);
 
 function queueSong() {
   console.log("Searching queue");
-  $.ajax('/getsong').done(function(data){
+
+  var channelName = $('input[name=channelRadio]:checked', '#channels').val();
+  console.log(channelName);
+
+  $.ajax('/getsong?c=' + channelName).done(function(data){
+    console.log(data);
 
     try{
-      var songId = "";
+      var songData = {};
+
       for(var i = 0; i < 5; i++) {
         element = data.items[i];
         if(element.id.kind == "youtube#video")
         {
-          songId = data.items[0].id.videoId;
+          songData.videoId = data.items[0].id.videoId;
+          songData.description = data.items[0].snippet.description;
+          songData.thumbnail = data.items[0].snippet.thumbnails.medium.url;
+          songData.title = data.items[0].snippet.title;
           break;
         }
       }
 
-      if(songId != "" && videoQueue.indexOf(songId) == -1)
-        videoQueue.push(songId);
+      if(songData != {} && !existsInArray(videoQueue, songData.videoId)) {
+        videoQueue.push(songData);
 
-      console.log(videoQueue);
+        if(videoQueue.length > 1)
+          makeQueueItem(songData);
+      }
+
     }
     catch(err) {
-      console.log(data);
-      console.log("No song to push to queue.");
+      console.log("No song to push to queue." );
     }
 
+    console.log(videoQueue);
     if(!setupDone) {
       setupVideo();
     }
@@ -38,7 +50,33 @@ function queueSong() {
       if(state == 0)
         loadNextSong();
     }
+
   });
+}
+
+function existsInArray(array, id) {
+    for(var i=0;i<array.length;i++) {
+        if (array[i].videoId === id)
+          return true;
+    }
+    return false;
+}
+
+function makeQueueItem(queueItem) {
+  console.log("Making queue item.");
+
+  var image = $("<img>").attr("src", queueItem.thumbnail);
+  var title = $("<span>").text(queueItem.title);
+  var desc = $("<span>>").text(queueItem.description);
+
+  var rootTag = $("<div>", {class: "queueItem"})
+                      .append(image)
+                      .append(title)
+                      .append(desc);
+
+
+  $("#queue").append(rootTag);
+
 }
 
 function onYouTubeIframeAPIReady() {
@@ -47,7 +85,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '390',
       width: '640',
-      videoId: videoQueue[0],
+      videoId: videoQueue[0].videoId,
       events: {
         'onReady': onPlayerReady,
         'onStateChange': onPlayerStateChange
@@ -74,10 +112,14 @@ function loadNextSong() {
   if(videoQueue.length > 1) {
     console.log("Loading next song");
     videoQueue.shift()
-    player.loadVideoById(videoQueue[0]);
+    player.loadVideoById(videoQueue[0].videoId);
+
+    var queueItems = $("#queue").children();
+    if( queueItems.length > 0 ) {
+      queueItems[0].remove();
+    }
   }
 }
-
 
 function setupVideo() {
   var tag = document.createElement('script');
@@ -86,6 +128,20 @@ function setupVideo() {
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 }
 
+function buildChannelSelector() {
+  for( var i = 0; i < sxmChannels.length; i++ ) {
+    var radioButton = $("<input>").attr("type", "radio")
+      .attr("value", sxmChannels[i].value)
+      .attr("name", "channelRadio");
+
+    if( i == 0 )
+      radioButton.attr("checked", true);
+
+    $("#channels").append(radioButton).append(sxmChannels[i].key);
+  }
+}
+
 $(document).ready(function(){
+  buildChannelSelector();
   queueSong();
 });
