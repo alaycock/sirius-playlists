@@ -14,25 +14,12 @@ function queueSong() {
     console.log(data);
 
     try{
-      var songData = {};
 
-      for(var i = 0; i < 5; i++) {
-        element = data.items[i];
-        if(element.id.kind == "youtube#video")
-        {
-          songData.videoId = element.id.videoId;
-          songData.description = element.snippet.description;
-          songData.thumbnail = element.snippet.thumbnails.medium.url;
-          songData.title = element.snippet.title;
-          break;
-        }
-      }
-
-      if(songData != {} && !existsInArray(videoQueue, songData.videoId)) {
-        videoQueue.push(songData);
+      if(data != {} && !existsInArray(videoQueue, data)) {
+        videoQueue.push(data.tracks[0]);
 
         if(videoQueue.length > 1)
-          makeQueueItem(songData);
+          makeQueueItem(data.tracks[0]);
       }
 
     }
@@ -50,13 +37,12 @@ function queueSong() {
       if(state == 0)
         loadNextSong();
     }
-
   });
 }
 
-function existsInArray(array, id) {
+function existsInArray(array, item) {
     for(var i=0;i<array.length;i++) {
-        if (array[i].videoId === id)
+        if ( array[i].video_id === item.tracks[0].video_id )
           return true;
     }
     return false;
@@ -85,7 +71,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '390',
       width: '640',
-      videoId: videoQueue[0].videoId,
+      videoId: videoQueue[0].video_id,
       events: {
         'onReady': onPlayerReady,
         'onStateChange': onPlayerStateChange
@@ -112,7 +98,7 @@ function loadNextSong() {
   if(videoQueue.length > 1) {
     console.log("Loading next song");
     videoQueue.shift()
-    player.loadVideoById(videoQueue[0].videoId);
+    player.loadVideoById(videoQueue[0].video_id);
 
     var queueItems = $("#queue").children();
     if( queueItems.length > 0 ) {

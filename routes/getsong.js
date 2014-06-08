@@ -28,14 +28,16 @@ function generateRadioURL(req, time) {
 
 function getRadioData(req, res, time) {
 
-  console.log(time);
   try {
     sirius_source = generateRadioURL(req, time);
   }
   catch(err) {
-    respond_error(err);
+    respondError(err);
     return;
   }
+
+  var songData = {};
+  songData.channel = req.query.c;
 
   console.log("Retrieving songs for " + date_string + " ");
 
@@ -44,7 +46,7 @@ function getRadioData(req, res, time) {
   request({uri: sirius_source}, function(err, response, body) {
     if(err && response.statusCode !== 200){
       console.log('Request error.');
-      respond_error("Could not reach SeriusXM website.");
+      respondError("Could not reach SeriusXM website.");
       return;
     }
 
@@ -52,24 +54,22 @@ function getRadioData(req, res, time) {
       data = JSON.parse(body);
     }
     catch(err) {
-      respond_error("Could not parse SeriusXM page.");
+      respondError("Could not parse SeriusXM page.");
       return;
     }
 
     if(data.channelMetadataResponse.messages.code != 100)
       console.log("No song data returned");
     else {
-      artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
-      song = data.channelMetadataResponse.metaData.currentEvent.song.name;
-      search_string = artist + ' - ' + song;
+      songData.artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
+      songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
+      search_string = songData.artist + ' - ' + songData.title;
     }
 
-
-    // Debug
     if( req.query.c == 'debug' )
-      searchYoutube(res, "like it? - #BPMBREAKER");
+      searchYoutube(res, "like it? - #BPMBREAKER", songData);
     else
-      searchYoutube(res, search_string);
+      searchYoutube(res, search_string, songData);
   });
 }
 
@@ -78,32 +78,54 @@ function zeroPad(number) {
 }
 
 
-function searchYoutube(res, query) {
+function searchYoutube(res, query, songData) {
   console.log("Searching for song: " + query);
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
     if (err) {
       console.log("Error during client discovery: " + err);
-      respond_error("Error discovering YouTube client.");
+      respondError("Error discovering YouTube client.");
       return;
     }
     var params = { q: query, part: 'snippet'};
-    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(print_result(res));
+    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(printResult(res, songData));
   });
 }
 
-function print_result(res) {
+function printResult(res, songData) {
   return function(err, response) {
     if(err) {
       console.log("Error retreiving YouTube video.");
-      respond_error("Internal error, could not contact YouTube.");
+      respondError("Internal error, could not contact YouTube.");
       return;
     }
-    res.send({items: response.items});
+    res.send(buildResponseObejct(response, songData));
   }
 };
 
-function respond_error(res, err) {
+function buildResponseObejct(oldObj, songData) {
+  var retObj = {};
+  retObj.source_artist = songData.artist;
+  retObj.source_title = songData.title;
+  retObj.source_channel = songData.channel;
+  retObj.tracks = [];
+
+  for(var i = 0; i < oldObj.items.length; i++) {
+    var item = oldObj.items[i];
+    if(item.id.kind == "youtube#video") {
+      var track = {};
+      track.video_id = item.id.videoId;
+      track.description = item.snippet.description;0
+      track.thumbnail = item.snippet.thumbnails.medium.url;
+      track.title = item.snippet.title;
+      retObj.tracks.push(track);
+    }
+  }
+
+  return retObj;
+}
+
+function respondError(res, err) {
   error = {'error': err};
   res.send(error);
 }
