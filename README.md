@@ -19,5 +19,5 @@ To Do
 *  Add caching/database, instead of a fresh scrape every time /getsong is requested
 *  Make it pretty
 *  Add 'next' button
-*  /getsong returns too much irrelevant metadata
-*  Make priority list for stations
+*  Make priority list for stations (using a sortable list)
+*  Get a complete list of stations.
