@@ -20,10 +20,10 @@ function queueSong() {
         element = data.items[i];
         if(element.id.kind == "youtube#video")
         {
-          songData.videoId = data.items[0].id.videoId;
-          songData.description = data.items[0].snippet.description;
-          songData.thumbnail = data.items[0].snippet.thumbnails.medium.url;
-          songData.title = data.items[0].snippet.title;
+          songData.videoId = element.id.videoId;
+          songData.description = element.snippet.description;
+          songData.thumbnail = element.snippet.thumbnails.medium.url;
+          songData.title = element.snippet.title;
           break;
         }
       }

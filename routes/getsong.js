@@ -3,16 +3,15 @@ var express = require('express');
 var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
-var apiKey = process.argv[2];
+
 var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
-var page_res;
 
 router.get('/', function(req, res) {
 
   console.log("Getting song.");
-  page_res = res;
+  this.res = res;
 
-  getRadioData(req, new Date());
+  getRadioData(req, res, new Date());
 });
 
 function generateRadioURL(req, time) {
@@ -24,11 +23,10 @@ function generateRadioURL(req, time) {
 
   if( req.query.c == undefined ) throw "No channel specified.";
 
-
   return data_url.replace("$$$$$", req.query.c) + date_string
 }
 
-function getRadioData(req, time) {
+function getRadioData(req, res, time) {
 
   console.log(time);
   try {
@@ -59,14 +57,19 @@ function getRadioData(req, time) {
     }
 
     if(data.channelMetadataResponse.messages.code != 100)
-      console.log("No data returned");
+      console.log("No song data returned");
     else {
       artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
       song = data.channelMetadataResponse.metaData.currentEvent.song.name;
       search_string = artist + ' - ' + song;
     }
 
-    searchYoutube(search_string);
+
+    // Debug
+    if( req.query.c == 'debug' )
+      searchYoutube(res, "like it? - #BPMBREAKER");
+    else
+      searchYoutube(res, search_string);
   });
 }
 
@@ -75,7 +78,7 @@ function zeroPad(number) {
 }
 
 
-function searchYoutube(query) {
+function searchYoutube(res, query) {
   console.log("Searching for song: " + query);
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
@@ -85,22 +88,24 @@ function searchYoutube(query) {
       return;
     }
     var params = { q: query, part: 'snippet'};
-    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(print_result);
+    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(print_result(res));
   });
 }
 
-function print_result(err, response) {
-  if(err) {
-    console.log("Error retreiving YouTube video.");
-    respond_error("Internal error, could not contact YouTube.");
-    return;
+function print_result(res) {
+  return function(err, response) {
+    if(err) {
+      console.log("Error retreiving YouTube video.");
+      respond_error("Internal error, could not contact YouTube.");
+      return;
+    }
+    res.send({items: response.items});
   }
-  page_res.send({items: response.items});
-}
+};
 
-function respond_error(err) {
+function respond_error(res, err) {
   error = {'error': err};
-  page_res.send(error);
+  res.send(error);
 }
 
 module.exports = router;
