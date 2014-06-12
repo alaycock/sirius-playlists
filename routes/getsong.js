@@ -1,4 +1,5 @@
 var config = require('../config');
+var database = require('../mongo');
 var express = require('express');
 var router = express.Router();
 var request = require('request');
@@ -11,7 +12,11 @@ router.get('/', function(req, res) {
   console.log("Getting song.");
   this.res = res;
 
-  getRadioData(req, res, new Date());
+  var coeff = 1000 * 60;
+  var date = new Date();  //or use any other date
+  var nearestMinute = new Date(Math.round(date.getTime() / coeff) * coeff)
+
+  getRadioData(req, res, nearestMinute);
 });
 
 function generateRadioURL(req, time) {
@@ -32,12 +37,13 @@ function getRadioData(req, res, time) {
     sirius_source = generateRadioURL(req, time);
   }
   catch(err) {
-    respondError(err);
+    respondError(res, err);
     return;
   }
 
   var songData = {};
-  songData.channel = req.query.c;
+  songData.source_channel = req.query.c;
+
 
   console.log("Retrieving songs for " + date_string + " ");
 
@@ -46,7 +52,7 @@ function getRadioData(req, res, time) {
   request({uri: sirius_source}, function(err, response, body) {
     if(err && response.statusCode !== 200){
       console.log('Request error.');
-      respondError("Could not reach SeriusXM website.");
+      respondError(res, "Could not reach SeriusXM website.");
       return;
     }
 
@@ -54,15 +60,19 @@ function getRadioData(req, res, time) {
       data = JSON.parse(body);
     }
     catch(err) {
-      respondError("Could not parse SeriusXM page.");
+      respondError(res, "Could not parse SeriusXM page.");
       return;
     }
 
-    if(data.channelMetadataResponse.messages.code != 100)
-      console.log("No song data returned");
+    if(data.channelMetadataResponse.messages.code != 100) {
+      respondError(res, "No song data returned.");
+      return;
+    }
     else {
       songData.artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
       songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
+
+      songData.time = time;
       search_string = songData.artist + ' - ' + songData.title;
     }
 
@@ -99,7 +109,9 @@ function printResult(res, songData) {
       respondError("Internal error, could not contact YouTube.");
       return;
     }
-    res.send(buildResponseObejct(response, songData));
+    var responseObj = buildResponseObejct(response, songData);
+    database.connect(database.findOrSaveTrack(songData));
+    res.send(responseObj);
   }
 };
 
@@ -108,6 +120,7 @@ function buildResponseObejct(oldObj, songData) {
   retObj.source_artist = songData.artist;
   retObj.source_title = songData.title;
   retObj.source_channel = songData.channel;
+  retObj.time = songData.time;
   retObj.tracks = [];
 
   for(var i = 0; i < oldObj.items.length; i++) {

@@ -15,7 +15,7 @@ function queueSong() {
 
     try{
 
-      if(data != {} && !existsInArray(videoQueue, data)) {
+      if(data != {} && !existsInArray(videoQueue, data) && data.tracks.length > 0) {
         videoQueue.push(data.tracks[0]);
 
         if(videoQueue.length > 1)
@@ -28,7 +28,7 @@ function queueSong() {
     }
 
     console.log(videoQueue);
-    if(!setupDone) {
+    if(!setupDone && data.tracks.length > 0) {
       setupVideo();
     }
 
