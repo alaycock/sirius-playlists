@@ -14,7 +14,7 @@ router.get('/', function(req, res) {
 
   var coeff = 1000 * 60;
   var date = new Date();  //or use any other date
-  var nearestMinute = new Date(Math.round(date.getTime() / coeff) * coeff)
+  var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff)
 
   getRadioData(req, res, nearestMinute);
 });
