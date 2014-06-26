@@ -4,6 +4,7 @@ var express = require('express');
 var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
+var sys = require('../app');
 
 var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
 
@@ -43,11 +44,14 @@ function getRadioData(req, res, time) {
 
   var songData = {};
   songData.source_channel = req.query.c;
+  songData.time = time;
 
 
   console.log("Retrieving songs for " + date_string + " ");
 
   console.log("From the url " + sirius_source);
+
+  database.findTrack(req.db, songData);
 
   request({uri: sirius_source}, function(err, response, body) {
     if(err && response.statusCode !== 200){
@@ -71,15 +75,13 @@ function getRadioData(req, res, time) {
     else {
       songData.artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
       songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
-
-      songData.time = time;
       search_string = songData.artist + ' - ' + songData.title;
     }
 
     if( req.query.c == 'debug' )
-      searchYoutube(res, "like it? - #BPMBREAKER", songData);
+      searchYoutube(req, res, "like it? - #BPMBREAKER", songData);
     else
-      searchYoutube(res, search_string, songData);
+      searchYoutube(req, res, search_string, songData);
   });
 }
 
@@ -88,7 +90,7 @@ function zeroPad(number) {
 }
 
 
-function searchYoutube(res, query, songData) {
+function searchYoutube(req, res, query, songData) {
   console.log("Searching for song: " + query);
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
@@ -98,11 +100,11 @@ function searchYoutube(res, query, songData) {
       return;
     }
     var params = { q: query, part: 'snippet'};
-    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(printResult(res, songData));
+    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(printResult(req, res, songData));
   });
 }
 
-function printResult(res, songData) {
+function printResult(req, res, songData) {
   return function(err, response) {
     if(err) {
       console.log("Error retreiving YouTube video.");
@@ -111,7 +113,7 @@ function printResult(res, songData) {
     }
     var responseObj = buildResponseObejct(response, songData);
     console.log(responseObj);
-    database.connect(database.saveTrack(responseObj));
+    database.saveTrack(req.db, responseObj);
     res.send(responseObj);
   }
 };
