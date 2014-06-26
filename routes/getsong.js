@@ -110,16 +110,18 @@ function printResult(res, songData) {
       return;
     }
     var responseObj = buildResponseObejct(response, songData);
-    database.connect(database.findOrSaveTrack(songData));
+    console.log(responseObj);
+    database.connect(database.saveTrack(responseObj));
     res.send(responseObj);
   }
 };
 
 function buildResponseObejct(oldObj, songData) {
+  console.log(songData);
   var retObj = {};
   retObj.source_artist = songData.artist;
   retObj.source_title = songData.title;
-  retObj.source_channel = songData.channel;
+  retObj.source_channel = songData.source_channel;
   retObj.time = songData.time;
   retObj.tracks = [];
 

@@ -1,19 +1,5 @@
 var MongoClient = require('mongodb').MongoClient;
 
-/*
-var songSchema = mongoose.Schema({
-  source_artist: String,
-  source_title: String,
-  source_channel: String,
-  time: Date,
-  tracks: [{
-    video_id: String,
-    description: String,
-    thumbnail: String,
-    title: String
-  }]
-});*/
-
 var database = {
   connect: function(onConnect) {
     MongoClient.connect('mongodb://localhost/test', function(err, db) {
@@ -29,10 +15,8 @@ var database = {
     });
   },
 
-  findOrSaveTrack: function(toSave) {
+  saveTrack: function(toSave) {
     return function(db, collection) {
-
-
 
       var conditions = {
         source_channel: toSave.source_channel,
@@ -56,19 +40,16 @@ var database = {
 
         collection.update(conditions, toSave, options, function(err, doc) {
           if (err) {
-            console.error(err);
+            console.error(err, doc);
             db.close();
             return;
           }
-          console.log(doc);
+          console.log(err, doc);
           db.close();
         });
 
 
       });
-
-
-//      collection.update();
 
     }
   }
