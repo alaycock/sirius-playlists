@@ -16,8 +16,8 @@ Installation
 To Do
 -----
 
-*  Add caching/database, instead of a fresh scrape every time /getsong is requested
+*  Error handling, don't allow people to request non-existant channels (could be abused)
 *  Make it pretty
-*  Add 'next' button
+*  Make skipping and jumping between songs easier, maybe a better queue 
 *  Make priority list for stations (using a sortable list)
 *  Get a complete list of stations.
