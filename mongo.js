@@ -1,14 +1,16 @@
 var MongoClient = require('mongodb').MongoClient;
 
 var database = {
-  findTrack: function(db, toFind) {
+  findTrack: function(db, toFind, cb) {
     var collection = db.get('songQueue');
 
     var conditions = {
       source_channel: toFind.source_channel,
       time: toFind.time
     };
-    console.log(conditions);
+
+
+    console.log("searching for:", conditions)
 
     var cursor = collection.findOne(conditions, function(err, doc) {
       if (err) {
@@ -17,7 +19,8 @@ var database = {
       }
 
       if (doc)
-        return doc;
+        console.log('cb')
+        cb(doc)
     });
   },
 
@@ -28,7 +31,7 @@ var database = {
       time: toSave.time
     };
 
-    console.log(conditions);
+    console.log("OUTPUT:", conditions, toSave)
 
     var options = {
       upsert: true

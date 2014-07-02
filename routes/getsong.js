@@ -17,7 +17,7 @@ router.get('/', function(req, res) {
   var date = new Date();  //or use any other date
   var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff)
 
-  getRadioData(req, res, nearestMinute);
+  searchForSong(req, res, nearestMinute);
 });
 
 function generateRadioURL(req, time) {
@@ -32,8 +32,29 @@ function generateRadioURL(req, time) {
   return data_url.replace("$$$$$", req.query.c) + date_string
 }
 
-function getRadioData(req, res, time) {
+function searchForSong(req, res, time) {
+  var songData = {};
+  songData.source_channel = req.query.c;
+  songData.time = time;
 
+  database.findTrack(req.db, songData, dbResult(req, res, time, songData));
+}
+
+function dbResult(req, res, time, songData) {
+  return function(doc) {
+    console.log(songData)
+    if(doc) {
+      console.log("found in db")
+      res.send(doc);
+    }
+    else {
+      console.log("Not found in db", songData)
+      getRadioData(req, res, time, songData)
+    }
+  }
+}
+
+function getRadioData(req, res, time, songData) {
   try {
     sirius_source = generateRadioURL(req, time);
   }
@@ -41,17 +62,6 @@ function getRadioData(req, res, time) {
     respondError(res, err);
     return;
   }
-
-  var songData = {};
-  songData.source_channel = req.query.c;
-  songData.time = time;
-
-
-  console.log("Retrieving songs for " + date_string + " ");
-
-  console.log("From the url " + sirius_source);
-
-  database.findTrack(req.db, songData);
 
   request({uri: sirius_source}, function(err, response, body) {
     if(err && response.statusCode !== 200){
@@ -67,6 +77,8 @@ function getRadioData(req, res, time) {
       respondError(res, "Could not parse SeriusXM page.");
       return;
     }
+
+    console.log(songData)
 
     if(data.channelMetadataResponse.messages.code != 100) {
       respondError(res, "No song data returned.");
@@ -91,7 +103,6 @@ function zeroPad(number) {
 
 
 function searchYoutube(req, res, query, songData) {
-  console.log("Searching for song: " + query);
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
     if (err) {
@@ -112,14 +123,12 @@ function printResult(req, res, songData) {
       return;
     }
     var responseObj = buildResponseObejct(response, songData);
-    console.log(responseObj);
     database.saveTrack(req.db, responseObj);
     res.send(responseObj);
   }
 };
 
 function buildResponseObejct(oldObj, songData) {
-  console.log(songData);
   var retObj = {};
   retObj.source_artist = songData.artist;
   retObj.source_title = songData.title;
