@@ -10,7 +10,7 @@ var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/t
 
 router.get('/', function(req, res) {
 
-  console.log("Getting song.");
+  console.log("Request started.");
   this.res = res;
 
   var coeff = 1000 * 60;
@@ -42,13 +42,13 @@ function searchForSong(req, res, time) {
 
 function dbResult(req, res, time, songData) {
   return function(doc) {
-    console.log(songData)
+    console.log('DB returned')
     if(doc) {
-      console.log("found in db")
+      console.log("Song found in db")
       res.send(doc);
     }
     else {
-      console.log("Not found in db", songData)
+      console.log("Song not found in db")
       getRadioData(req, res, time, songData)
     }
   }
@@ -63,6 +63,7 @@ function getRadioData(req, res, time, songData) {
     return;
   }
 
+  console.log('Requesting data from sirius xm')
   request({uri: sirius_source}, function(err, response, body) {
     if(err && response.statusCode !== 200){
       console.log('Request error.');
@@ -78,8 +79,6 @@ function getRadioData(req, res, time, songData) {
       return;
     }
 
-    console.log(songData)
-
     if(data.channelMetadataResponse.messages.code != 100) {
       respondError(res, "No song data returned.");
       return;
@@ -89,11 +88,8 @@ function getRadioData(req, res, time, songData) {
       songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
       search_string = songData.artist + ' - ' + songData.title;
     }
-
-    if( req.query.c == 'debug' )
-      searchYoutube(req, res, "like it? - #BPMBREAKER", songData);
-    else
-      searchYoutube(req, res, search_string, songData);
+    console.log('Searching youtube for song')
+    searchYoutube(req, res, search_string, songData);
   });
 }
 
@@ -117,6 +113,7 @@ function searchYoutube(req, res, query, songData) {
 
 function printResult(req, res, songData) {
   return function(err, response) {
+    console.log('Song found on youtube')
     if(err) {
       console.log("Error retreiving YouTube video.");
       respondError("Internal error, could not contact YouTube.");

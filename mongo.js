@@ -13,14 +13,14 @@ var database = {
     console.log("searching for:", conditions)
 
     var cursor = collection.findOne(conditions, function(err, doc) {
+
+      console.log(err, doc)
+
       if (err) {
-        console.error(err);
+        console.error("Error:", err);
         return;
       }
-
-      if (doc)
-        console.log('cb')
-        cb(doc)
+      cb(doc)
     });
   },
 
