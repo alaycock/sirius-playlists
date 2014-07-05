@@ -2,6 +2,7 @@
   "name": "serious-playlists",
   "version": "0.0.1",
   "private": true,
+  "main": "./bin/www"
   "scripts": {
     "start": "node ./bin/www"
   },
@@ -16,6 +17,6 @@
     "morgan": "^1.1.1",
     "request": "~2.36.0",
     "static-favicon": "^1.0.2",
-    "monk": "*"
+    "monk": "0.9.0"
   }
 }

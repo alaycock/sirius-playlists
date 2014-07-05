@@ -32,8 +32,6 @@ router.get('/', function(req, res) {
     return;
   }
 
-
-
   searchForSong(req, res, nearestMinute);
 });
 
