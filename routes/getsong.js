@@ -5,6 +5,7 @@ var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
 var sys = require('../app');
+var channels = require('../channels')
 
 var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
 
@@ -17,6 +18,22 @@ router.get('/', function(req, res) {
   var date = new Date();  //or use any other date
   var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff)
 
+  if( req.query.c == undefined ) throw "No channel specified.";
+  var channelExists = false;
+  for (var key in channels) {
+    if (channels[key].value == req.query.c) {
+      channelExists = true;
+      break;
+    }
+  }
+
+  if (!channelExists) {
+    respondError(res, 'Channel not allowed');
+    return;
+  }
+
+
+
   searchForSong(req, res, nearestMinute);
 });
 
@@ -27,7 +44,7 @@ function generateRadioURL(req, time) {
     zeroPad(time.getUTCHours()) + ":" +
     zeroPad(time.getUTCMinutes()) + ":" + "00";
 
-  if( req.query.c == undefined ) throw "No channel specified.";
+
 
   return data_url.replace("$$$$$", req.query.c) + date_string
 }
