@@ -9,7 +9,8 @@ var monk = require('monk');
 var home = require('./routes/index');
 var getSong = require('./routes/getsong');
 
-var db = monk('mongodb://localhost/test');
+var mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || 'mongodb://localhost/test';
+var db = monk(mongoURL);
 var app = express();
 
 // view engine setup
