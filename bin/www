@@ -7,6 +7,6 @@ app.set('addr', process.env.OPENSHIFT_NODEJS_IP || 'localhost');
 console.log(app.get('port'))
 console.log(app.get('addr'))
 
-var server = app.listen(app.get('port'), function() {
+var server = app.listen(app.get('port'), app.get('addr'), function() {
   debug('Express server listening on port ' + server.address().port);
 });
