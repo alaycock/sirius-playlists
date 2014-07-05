@@ -2,7 +2,7 @@
   "name": "serious-playlists",
   "version": "0.0.1",
   "private": true,
-  "main": "./bin/www"
+  "main": "./bin/www",
   "scripts": {
     "start": "node ./bin/www"
   },
