@@ -10,8 +10,10 @@ Installation
 
 1.  Clone this repo
 2.  Install npm
-3.  `npm install` to install dependencies
-4.  `npm start` to start the web server on localhost:3000
+3.  Get a Youtube API key and set it to the environment variable YT_API_KEY
+4.  Install MongoDB and ensure you can connect to it
+5.  `npm install` to install dependencies
+6.  `npm start` to start the web server on localhost:3000
 
 To Do
 -----
