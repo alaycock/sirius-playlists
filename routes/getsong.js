@@ -123,6 +123,7 @@ function searchYoutube(req, res, query, songData) {
     var params = { q: query, part: 'snippet'};
 
     var apiKey = process.env.YT_API_KEY || '';
+    console.log(apiKey);
 
     client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
   });
