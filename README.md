@@ -1,7 +1,7 @@
 serious-playlists
 =================
 
-SiriusXM scraper + playlist generator
+SiriusXM scraper + playlist generator which powers [Serious Playlists](http://music.adamlaycock.ca/)
 
 It's a web service that scrapes the Sirius XM 'now playing' data, finds it on youtube, and plays as it is scraped. It's a makeshift free internet satellite radio service, with just the music.
 
@@ -16,8 +16,8 @@ Installation
 To Do
 -----
 
-*  Error handling, don't allow people to request non-existant channels (could be abused)
 *  Make it pretty
-*  Make skipping and jumping between songs easier, maybe a better queue 
+*  Improve the song queue, when the application loads, build a queue of old songs.
 *  Make priority list for stations (using a sortable list)
 *  Get a complete list of stations.
+*  If there isn't anything in the DB for a specific channel and time, grab the most recent track
