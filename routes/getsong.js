@@ -124,7 +124,7 @@ function searchYoutube(req, res, query, songData) {
 
     var apiKey = process.env.YT_API_KEY || '';
 
-    client.youtube.search.list(params).withApiKey(config.APIKEY).execute(printResult(req, res, songData));
+    client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
   });
 }
 
