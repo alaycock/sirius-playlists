@@ -123,7 +123,6 @@ function searchYoutube(req, res, query, songData) {
     var params = { q: query, part: 'snippet'};
 
     var apiKey = process.env.YT_API_KEY || '';
-    console.log(apiKey);
 
     client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
   });
@@ -133,8 +132,8 @@ function printResult(req, res, songData) {
   return function(err, response) {
     console.log('Song found on youtube')
     if(err) {
-      console.log("Error retreiving YouTube video.");
-      respondError("Internal error, could not contact YouTube.");
+      console.log("Error retreiving YouTube video. ", err);
+      respondError(res, "Internal error, could not contact YouTube.");
       return;
     }
     var responseObj = buildResponseObejct(response, songData);
