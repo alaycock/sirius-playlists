@@ -1,4 +1,3 @@
-var config = require('../config');
 var database = require('../mongo');
 var express = require('express');
 var router = express.Router();
@@ -122,6 +121,9 @@ function searchYoutube(req, res, query, songData) {
       return;
     }
     var params = { q: query, part: 'snippet'};
+
+    var apiKey = process.env.YT_API_KEY || '';
+
     client.youtube.search.list(params).withApiKey(config.APIKEY).execute(printResult(req, res, songData));
   });
 }
