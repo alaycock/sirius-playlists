@@ -123,8 +123,10 @@ function searchYoutube(req, res, query, songData) {
     var params = { q: query, part: 'snippet'};
 
     var apiKey = process.env.YT_API_KEY || '';
-
-    client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
+    if (apiKey == '')
+      respondError(res, "API environment variable unset, cannot contact youtube.")
+    else
+      client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
   });
 }
 

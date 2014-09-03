@@ -14,9 +14,17 @@ function queueSong() {
     console.log(data);
 
     try{
+      if(data.error != undefined)
+
+        throw "Server error, trying again in 30 seconds"
 
       if(data != {} && !existsInArray(videoQueue, data) && data.tracks.length > 0) {
-        videoQueue.push(data.tracks[0]);
+        videoQueue.push({
+          artist: data.source_artist,
+          title: data.source_title,
+          channel: data.source_channel,
+          video: data.tracks[0]
+        });
 
         if(videoQueue.length > 1)
           makeQueueItem(data.tracks[0]);
@@ -24,25 +32,31 @@ function queueSong() {
 
     }
     catch(err) {
-      console.log("No song to push to queue." );
+      console.log("No song to push to queue. " + err);
     }
 
-    console.log(videoQueue);
-    if(!setupDone && data.tracks.length > 0) {
-      setupVideo();
-    }
+    try {
 
-    if(player != undefined) {
-      var state = player.getPlayerState();
-      if(state == 0)
-        loadNextSong();
+      console.log(videoQueue);
+      if(!setupDone && data.tracks.length > 0) {
+        setupVideo();
+      }
+
+      if(player != undefined) {
+        var state = player.getPlayerState();
+        if(state == 0)
+          loadNextSong();
+      }
+    }
+    catch(err) {
+      console.log("Could not setup player, trying again in 30 seconds")
     }
   });
 }
 
 function existsInArray(array, item) {
     for(var i=0;i<array.length;i++) {
-        if ( array[i].video_id === item.tracks[0].video_id )
+        if ( array[i].video.video_id === item.tracks[0].video_id )
           return true;
     }
     return false;
@@ -61,7 +75,7 @@ function makeQueueItem(queueItem) {
                       .append(desc);
 
 
-  $("#queue").append(rootTag);
+  $("#upcomingQueue").append(rootTag);
 
 }
 
@@ -71,7 +85,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '390',
       width: '640',
-      videoId: videoQueue[0].video_id,
+      videoId: videoQueue[0].video.video_id,
       events: {
         'onReady': onPlayerReady,
         'onStateChange': onPlayerStateChange
@@ -86,7 +100,7 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-  if (event.data === 0) {
+  if (event.data === 0) { // 0 means song ended, see YT API docs
     loadNextSong();
   }
 }
@@ -98,11 +112,16 @@ function loadNextSong() {
   if(videoQueue.length > 1) {
     console.log("Loading next song");
     videoQueue.shift()
-    player.loadVideoById(videoQueue[0].video_id);
+    player.loadVideoById(videoQueue[0].video.video_id);
 
-    var queueItems = $("#queue").children();
+    var queueItems = $("#upcomingQueue").children();
     if( queueItems.length > 0 ) {
-      queueItems[0].remove();
+      console.log(queueItems, queueItems[0])
+      endedSong = $("#upcomingQueue :first");//.css("display", "none");
+      endedQueue = $("#endedQueue").prepend(endedSong);
+
+      //if(endedQueue.length > 1)
+      //  $("#endedQueue div:nth-child(2)").css("display", "inline");
     }
   }
 }
@@ -116,14 +135,20 @@ function setupVideo() {
 
 function buildChannelSelector() {
   for( var i = 0; i < sxmChannels.length; i++ ) {
+
     var radioButton = $("<input>").attr("type", "radio")
       .attr("value", sxmChannels[i].value)
       .attr("name", "channelRadio");
 
+    var label = $("<label>").attr("for", sxmChannels[i].value)
+      .text(sxmChannels[i].key)
+
     if( i == 0 )
       radioButton.attr("checked", true);
 
-    $("#channels").append(radioButton).append(sxmChannels[i].key);
+    var wrapperDiv = $("<div>").append(radioButton).append(label);
+
+    $("#channels").append(wrapperDiv);
   }
 }
 

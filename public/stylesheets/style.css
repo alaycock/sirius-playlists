@@ -14,4 +14,26 @@ a {
 #player {
   margin-left: auto;
   margin-right: auto;
+  float: left;
+}
+
+#endedQueue {
+  width: 50%;
+  float: left;
+}
+#upcomingQueue {
+  float: left;
+  width: 50%;
+}
+
+#channels {
+  width: 300px;
+  overflow-y: scroll;
+  float: left;
+  height: 300px;
+}
+
+#queues {
+  width: 900px;
+  height: 1000px;
 }
