@@ -5,6 +5,11 @@ SiriusXM scraper + playlist generator which powers [Serious Playlists](http://mu
 
 It's a web service that scrapes the Sirius XM 'now playing' data, finds it on youtube, and plays as it is scraped. It's a makeshift free internet satellite radio service, with just the music.
 
+Usage
+-----
+
+Hopefully it should be pretty self-explanitory, load the page, select a station, and every 30 seconds it will search for a new track. If there is one, it will add it to the song queue. Songs are search for, and played through, YouTube. When a song ends, the next one will come on.
+
 Installation
 ------------
 
