@@ -9,17 +9,15 @@ Installation
 ------------
 
 1.  Clone this repo
-2.  Install npm
-3.  Get a Youtube API key and set it to the environment variable YT_API_KEY
-4.  Install MongoDB and ensure you can connect to it
-5.  `npm install` to install dependencies
-6.  `npm start` to start the web server on localhost:3000
+2.  Install Node.js and NPM
+3.  Install MongoDB and ensure you can connect to it
+4.  Get a Youtube API key and set it to the environment variable YT_API_KEY
+5.  `npm start` to start the web server on localhost:3000
 
 To Do
 -----
 
 *  Make it pretty
-*  Improve the song queue, when the application loads, build a queue of old songs.
+*  Improve the song queue, make it one big long queue, instead of a upcoming and completed one.
 *  Make priority list for stations (using a sortable list)
-*  Get a complete list of stations.
-*  If there isn't anything in the DB for a specific channel and time, grab the most recent track
+*  Improve the logic for selecting tracks, eg, grab 5 at startup to build the queue, select random previous song from that day if queue is empty, etc.
