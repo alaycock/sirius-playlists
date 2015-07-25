@@ -1,2 +1,3 @@
 *.log
 node_modules/googleapis/.cache/youtubev3-rest
+node_modules/
