@@ -41,8 +41,6 @@ function generateRadioURL(req, time) {
     zeroPad(time.getUTCHours()) + ":" +
     zeroPad(time.getUTCMinutes()) + ":" + "00";
 
-
-
   return data_url.replace("$$$$$", req.query.c) + date_string
 }
 
@@ -59,6 +57,7 @@ function dbResult(req, res, time, songData) {
     console.log('DB returned')
     if(doc) {
       console.log("Song found in db")
+      delete doc._id;
       res.send(doc);
     }
     else {
@@ -79,7 +78,7 @@ function getRadioData(req, res, time, songData) {
 
   console.log('Requesting data from sirius xm')
   request({uri: sirius_source}, function(err, response, body) {
-    if(err && response.statusCode !== 200){
+    if(err || response.statusCode == undefined || response.statusCode !== 200){
       console.log('Request error.');
       respondError(res, "Could not reach SeriusXM website.");
       return;
@@ -89,7 +88,7 @@ function getRadioData(req, res, time, songData) {
       data = JSON.parse(body);
     }
     catch(err) {
-      respondError(res, "Could not parse SeriusXM page.");
+      respondError(res, "Could not parse SiriusXM page.");
       return;
     }
 
@@ -145,6 +144,9 @@ function printResult(req, res, songData) {
 };
 
 function buildResponseObejct(oldObj, songData) {
+  console.log(oldObj);
+  console.log(songData);
+
   var retObj = {};
   retObj.source_artist = songData.artist;
   retObj.source_title = songData.title;
@@ -152,7 +154,9 @@ function buildResponseObejct(oldObj, songData) {
   retObj.time = songData.time;
   retObj.tracks = [];
 
-  for(var i = 0; i < oldObj.items.length; i++) {
+  // Number of song matches to return
+  var songMatches = 1;
+  for(var i = 0; i < songMatches; i++) {
     var item = oldObj.items[i];
     if(item.id.kind == "youtube#video") {
       var track = {};
