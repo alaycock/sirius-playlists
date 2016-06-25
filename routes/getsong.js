@@ -1,10 +1,9 @@
-var database = require('../mongo');
 var express = require('express');
 var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
-var sys = require('../app');
-var channels = require('../channels')
+var channels = require('../helpers/channels')
+var database = require('../helpers/mongo');
 
 var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
 
