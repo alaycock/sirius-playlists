@@ -2,149 +2,137 @@ var express = require('express');
 var router = express.Router();
 var request = require('request');
 var gapis = require('googleapis');
-var channels = require('../helpers/channels')
+var channels = require('../helpers/channels');
 var database = require('../helpers/mongo');
 
-var data_url = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/$$$$$/timestamp/";
+const SIRIUS_PREFIX = "http://www.siriusxm.com/metadata/pdt/en-us/json/channels/";
+const SIRUS_SUFFIX = "/timestamp/";
+
 
 router.get('/', function(req, res) {
 
-  console.log("Request started.");
   this.res = res;
 
-  var coeff = 1000 * 60;
+  const coeff = 60000;
   var date = new Date();  //or use any other date
-  var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff)
+  var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff);
 
   if( req.query.c == undefined ) throw "No channel specified.";
+
   var channelExists = false;
-  for (var key in channels) {
-    if (channels[key].value == req.query.c) {
-      channelExists = true;
-      break;
-    }
-  }
+  channelExists = channels.find((elem) => {
+    return elem.value == req.query.c;
+  });
 
   if (!channelExists) {
     respondError(res, 'Channel not allowed');
     return;
   }
 
-  searchForSong(req, res, nearestMinute);
-});
+  const songData = {
+    source_channel: req.query.c,
+    time: nearestMinute
+  };
 
-function generateRadioURL(req, time) {
-  date_string =
-    zeroPad(time.getUTCMonth() + 1) + "-" +
-    zeroPad(time.getUTCDate()) + "-" +
-    zeroPad(time.getUTCHours()) + ":" +
-    zeroPad(time.getUTCMinutes()) + ":" + "00";
-
-  return data_url.replace("$$$$$", req.query.c) + date_string
-}
-
-function searchForSong(req, res, time) {
-  var songData = {};
-  songData.source_channel = req.query.c;
-  songData.time = time;
-
-  database.findTrack(req.db, songData, dbResult(req, res, time, songData));
-}
-
-function dbResult(req, res, time, songData) {
-  return function(doc) {
-    console.log('DB returned')
-    if(doc) {
-      console.log("Song found in db")
-      delete doc._id;
-      res.send(doc);
-    }
-    else {
-      console.log("Song not found in db")
-      getRadioData(req, res, time, songData)
-    }
-  }
-}
-
-function getRadioData(req, res, time, songData) {
-  try {
-    sirius_source = generateRadioURL(req, time);
-  }
-  catch(err) {
-    respondError(res, err);
-    return;
-  }
-
-  console.log('Requesting data from sirius xm')
-  request({uri: sirius_source}, function(err, response, body) {
-    if(err || response.statusCode == undefined || response.statusCode !== 200){
-      console.log('Request error.');
-      respondError(res, "Could not reach SeriusXM website.");
+  database.findTrack(req.db, songData, (document) => {
+    if(document) {
+      delete document._id;
+      res.send(document);
       return;
     }
 
-    try {
-      data = JSON.parse(body);
-    }
-    catch(err) {
-      respondError(res, "Could not parse SiriusXM page.");
-      return;
-    }
+    getRadioData(nearestMinute, songData, req.query.c, (siriusErr, siriusData) => {
 
-    if(data.channelMetadataResponse.messages.code != 100) {
-      respondError(res, "No song data returned.");
-      return;
-    }
-    else {
-      songData.artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
-      songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
-      search_string = songData.artist + ' - ' + songData.title;
-    }
-    console.log('Searching youtube for song')
-    searchYoutube(req, res, search_string, songData);
+      if(siriusErr) {
+        respondError(res, siriusErr);
+        return;
+      }
+
+      const search_string = siriusData.artist + ' - ' + siriusData.title;
+      searchYoutube(search_string, (yt_err, yt_results) => {
+
+        if(!yt_err) {
+          const responseObj = buildResponseObejct(yt_results, songData);
+          database.saveTrack(req.db, responseObj);
+          res.send(responseObj);
+          return;
+        }
+
+        respondError(res, "Could not get song from YouTube.");
+      });
+    });
   });
-}
+});
 
 function zeroPad(number) {
   return String('0'+number).slice(-2);
 }
 
+function generateRadioURL(channel, time) {
+  const date_string =
+    zeroPad(time.getUTCMonth() + 1) + "-" +
+    zeroPad(time.getUTCDate()) + "-" +
+    zeroPad(time.getUTCHours()) + ":" +
+    zeroPad(time.getUTCMinutes()) + ":" + "00";
 
-function searchYoutube(req, res, query, songData) {
+  return `${SIRIUS_PREFIX}${channel}${SIRUS_SUFFIX}${date_string}`;
+}
+
+function getRadioData(time, songData, channel, callback) {
+  const sirius_source = generateRadioURL(channel, time);
+
+  // console.log('Requesting data from sirius xm')
+  request({uri: sirius_source}, function(err, response, body) {
+
+    if(err || response.statusCode == undefined || response.statusCode !== 200){
+      // console.log('Request error.');
+      callback("Could not get song from SiriusXM.");
+      return;
+    }
+
+    let data = null;
+    try {
+      data = JSON.parse(body);
+    }
+    catch(err) {
+      callback("Could not get song from SiriusXM.");
+      return;
+    }
+
+    if(data.channelMetadataResponse.messages.code != 100) {
+      callback("Could not get song from SiriusXM.");
+      return;
+    }
+    else {
+      songData.artist = data.channelMetadataResponse.metaData.currentEvent.artists.name;
+      songData.title = data.channelMetadataResponse.metaData.currentEvent.song.name;
+    }
+
+    callback(null, songData);
+  });
+}
+
+
+function searchYoutube(query, callback) {
 
   gapis.discover('youtube', 'v3').execute(function(err, client) {
     if (err) {
-      console.log("Error during client discovery: " + err);
-      respondError("Error discovering YouTube client.");
+      callback("Error discovering YouTube client.");
       return;
     }
     var params = { q: query, part: 'snippet'};
 
     var apiKey = process.env.YT_API_KEY || '';
-    if (apiKey == '')
-      respondError(res, "API environment variable unset, cannot contact youtube.")
+    if (apiKey == '') {
+      console.log("API environment variable unset, cannot contact youtube.");
+      callback("Error contacting YouTube.");
+    }
     else
-      client.youtube.search.list(params).withApiKey(apiKey).execute(printResult(req, res, songData));
+      client.youtube.search.list(params).withApiKey(apiKey).execute(callback);
   });
 }
 
-function printResult(req, res, songData) {
-  return function(err, response) {
-    console.log('Song found on youtube')
-    if(err) {
-      console.log("Error retreiving YouTube video. ", err);
-      respondError(res, "Internal error, could not contact YouTube.");
-      return;
-    }
-    var responseObj = buildResponseObejct(response, songData);
-    database.saveTrack(req.db, responseObj);
-    res.send(responseObj);
-  }
-};
-
 function buildResponseObejct(oldObj, songData) {
-  console.log(oldObj);
-  console.log(songData);
 
   var retObj = {};
   retObj.source_artist = songData.artist;
@@ -160,7 +148,7 @@ function buildResponseObejct(oldObj, songData) {
     if(item.id.kind == "youtube#video") {
       var track = {};
       track.video_id = item.id.videoId;
-      track.description = item.snippet.description;0
+      track.description = item.snippet.description;
       track.thumbnail = item.snippet.thumbnails.medium.url;
       track.title = item.snippet.title;
       retObj.tracks.push(track);
@@ -171,7 +159,7 @@ function buildResponseObejct(oldObj, songData) {
 }
 
 function respondError(res, err) {
-  error = {'error': err};
+  const error = {error: err};
   res.send(error);
 }
 

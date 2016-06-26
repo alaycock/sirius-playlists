@@ -1,0 +1,19 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": ["eslint:recommended"],
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true,
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "rules": {
+    "indent": ["warn", 2],
+    "semi": 1,
+    "no-console": "off"
+  }
+}
