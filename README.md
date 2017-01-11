@@ -14,10 +14,20 @@ Installation
 ------------
 
 1.  Clone this repo
-2.  Install Node.js and NPM
-3.  Install MongoDB and ensure you can connect to it
-4.  Get a Youtube API key and set it to the environment variable YT_API_KEY
-5.  `npm start` to start the web server on localhost:3000
+2.  Install Node.js, NPM, & Foreman (`gem install foreman`)
+3.  Install MongoDB and ensure you can connect to it. I use docker, so I would use this command: `docker run -p 27017:27017 --name sirius_mongo -d mongo`
+4.  Setup your environment file in `.env`. See below for the environment variables you should include.
+5.  `foreman start` to start the web server on `localhost:3000`
+
+Environment Variables
+------
+
+```
+MONGO_DB=mongodb://0.0.0.0:27017
+YT_API_KEY=XXXXXXXXXXXXXXXXXXXX
+```
+
+Additionally, I deploy to Openshift, so in my prod environment I could ensure I have the variables `OPENSHIFT_NODEJS_PORT` and `OPENSHIFT_NODEJS_IP`.
 
 To Do
 -----
