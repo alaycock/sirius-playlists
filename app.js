@@ -69,9 +69,8 @@ app.use((req, res, next) => {
 
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
-    res.render('error', {
-        message: err.message
-    });
+    res.send(err.message)
+    console.log(err.message)
 });
 
 module.exports = app;
