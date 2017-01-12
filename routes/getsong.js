@@ -11,8 +11,6 @@ const SIRUS_SUFFIX = "/timestamp/";
 
 router.get('/', function(req, res) {
 
-  this.res = res;
-
   const coeff = 60000;
   var date = new Date();  //or use any other date
   var nearestMinute = new Date(Math.floor(date.getTime() / coeff) * coeff);
