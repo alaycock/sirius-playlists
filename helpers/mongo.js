@@ -14,8 +14,6 @@ var database = {
 
     var cursor = collection.findOne(conditions, function(err, doc) {
 
-      console.log(err, doc)
-
       if (err) {
         console.error("Error:", err);
         return;

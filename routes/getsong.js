@@ -56,6 +56,7 @@ router.get('/', function(req, res) {
           return;
         }
 
+        console.log(yt_err);
         respondError(res, "Could not get song from YouTube.");
       });
     });
