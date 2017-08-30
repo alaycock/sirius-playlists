@@ -2,8 +2,8 @@
 var debug = require('debug')('serious-playlists');
 var app = require('../app');
 
-app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3000);
-app.set('addr', process.env.OPENSHIFT_NODEJS_IP || 'localhost');
+app.set('port', process.env.PORT || 3000);
+app.set('addr', process.env.HOST || 'localhost');
 console.log(app.get('port'))
 console.log(app.get('addr'))
 
