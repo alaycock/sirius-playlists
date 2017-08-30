@@ -49,8 +49,8 @@ router.get('/', function(req, res) {
       const search_string = siriusData.artist + ' - ' + siriusData.title;
       searchYoutube(search_string, (yt_err, yt_results) => {
 
-        if(!yt_err) {
-          const responseObj = buildResponseObejct(yt_results, songData);
+        if(!yt_err && yt_results.items.length > 0) {
+          const responseObj = buildResponseObject(yt_results, songData);
           database.saveTrack(req.db, responseObj);
           res.send(responseObj);
           return;
@@ -131,7 +131,7 @@ function searchYoutube(query, callback) {
   });
 }
 
-function buildResponseObejct(oldObj, songData) {
+function buildResponseObject(oldObj, songData) {
 
   var retObj = {};
   retObj.source_artist = songData.artist;
@@ -144,13 +144,15 @@ function buildResponseObejct(oldObj, songData) {
   var songMatches = 1;
   for(var i = 0; i < songMatches; i++) {
     var item = oldObj.items[i];
-    if(item.id.kind == "youtube#video") {
+    if(item && item.id && item.id.kind == "youtube#video") {
       var track = {};
       track.video_id = item.id.videoId;
       track.description = item.snippet.description;
       track.thumbnail = item.snippet.thumbnails.medium.url;
       track.title = item.snippet.title;
       retObj.tracks.push(track);
+    } else {
+      console.log('Video not valid', item);
     }
   }
 
