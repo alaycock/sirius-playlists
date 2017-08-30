@@ -2,11 +2,6 @@
 var debug = require('debug')('serious-playlists');
 var app = require('../app');
 
-app.set('port', process.env.PORT || 3000);
-app.set('addr', process.env.HOST || 'localhost');
-console.log(app.get('port'))
-console.log(app.get('addr'))
-
-var server = app.listen(app.get('port'), app.get('addr'), function() {
+var server = app.listen(process.env.PORT || 3000, function() {
   debug('Express server listening on port ' + server.address().port);
 });
