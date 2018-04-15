@@ -138,10 +138,11 @@ function buildChannelSelector() {
 
     var radioButton = $("<input>").attr("type", "radio")
       .attr("value", sxmChannels[i].value)
-      .attr("name", "channelRadio");
+      .attr("name", "channelRadio")
+      .click(queueSong);
 
     var label = $("<label>").attr("for", sxmChannels[i].value)
-      .text(sxmChannels[i].key)
+      .text(sxmChannels[i].number + ". " + sxmChannels[i].key)
 
     if( i == 0 )
       radioButton.attr("checked", true);
@@ -152,7 +153,13 @@ function buildChannelSelector() {
   }
 }
 
+function createNextButton() {
+  var button = $("<button type=button>Next</button>").click(loadNextSong);
+  $("#songName").append(button);
+}
+
 $(document).ready(function(){
+  createNextButton();
   buildChannelSelector();
   queueSong();
 });
