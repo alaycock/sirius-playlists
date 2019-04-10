@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-var debug = require('debug')('serious-playlists');
-var app = require('../app');
+require("dotenv").config();
+var debug = require("debug")("serious-playlists");
+var app = require("../app");
 
 var server = app.listen(process.env.PORT || 3000, function() {
-  debug('Express server listening on port ' + server.address().port);
+  debug("Express server listening on port " + server.address().port);
 });
